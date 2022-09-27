@@ -62,9 +62,25 @@ func (c *CommandRunner) CreateDirAndGo(name string, perm os.FileMode) error {
 	return nil
 }
 
+func (c *CommandRunner) getGitUser() ([]byte, error) {
+	cmd := exec.Command("git", "config", "user.name")
+	b, err := cmd.Output()
+
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
 func (c *CommandRunner) InitGoMod(name string) error {
-	cmd := exec.Command("go", "mod", "init", fmt.Sprintf("github.com/MarcoVitangeli/%s", name))
-	_, err := cmd.Output()
+	gitUser, err := c.getGitUser()
+	gitUser = gitUser[:len(gitUser)-1]
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command("go", "mod", "init", fmt.Sprintf("github.com/%s/%s", string(gitUser), name))
+	_, err = cmd.Output()
 
 	if err != nil {
 		return err
